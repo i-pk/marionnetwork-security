@@ -1,0 +1,166 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+def categorical2numerical(df):
+    df['Source'] = df['Source'].apply(lambda x: x.split('.'))
+    df['Source'] = df['Source'].apply(lambda x: ''.join(x))
+
+
+    #To remove 'f89e::soi0::h01i::fr45::q23e this kind of fields
+    for i,row in df.iterrows():
+        #print(row['Source'])
+        if((row['Source']).find(":") != -1):
+            #print('yy')
+            df.drop(i, inplace=True)     
+    df['Source'] = df['Source'].apply(lambda x:int(x))
+    df['Source'] = df['Source'].apply(lambda x:x/100000)
+
+
+    df['Destination'] = df['Destination'].apply(lambda x: x.split('.'))
+    df['Destination'] = df['Destination'].apply(lambda x: ''.join(x))
+    #To remove 'f89e::soi0::h01i::fr45::q23e this kind of fields
+    for i,row in df.iterrows():
+        #print(row['Destination'])
+        if((row['Destination']).find(":") != -1):
+            #print('yy')
+            df.drop(i, inplace=True)     
+    df['Destination'] = df['Destination'].apply(lambda x:int(x))
+    df['Destination'] = df['Destination'].apply(lambda x:x/100000)
+
+    df['Protocol'] = df['Length'].apply(lambda x: int(x/5))
+    
+    return df
+
+### Importing training data
+
+train_data = pd.read_excel('marionett_final_data.xlsx')
+
+train_data.head()
+
+### Feature extraction
+
+featured_train_data = train_data.drop(['No.','Time','Info'],axis=1)
+
+featured_train_data.head()
+
+### Data preprocessing
+
+categorical2numerical(featured_train_data)
+featured_train_data.head()
+
+sns.pairplot(data=featured_train_data)
+
+### CLUSTERING(Training data)
+
+from sklearn.cluster import KMeans
+
+
+
+kmeans_model = KMeans(n_clusters=5)
+X = featured_train_data[['Length','Protocol','Source','Destination']]
+kmeans_model.fit(X)
+kmeans_model.inertia_
+
+#saving cluster centers
+train_cluster_centers = kmeans_model.cluster_centers_
+
+featured_train_data['Predictions'] = kmeans_model.labels_
+
+featured_train_data.head()
+
+train_cluster_centers = pd.DataFrame(train_cluster_centers,columns=['Length','Protocol','Source','Destination'])
+
+train_cluster_centers.head()
+
+#Adding status of malware or benign in an attribute
+train_cluster_centers['Status'] = 0
+
+for i,row in train_cluster_centers.iterrows():
+    #print(row['length'])
+    if(((row['Length'])>=600) & ((row['Length'])<=650)):
+        print(train_cluster_centers['Length'][i])
+        train_cluster_centers['Status'][i] = 1
+    else:
+        print(train_cluster_centers['Length'][i]) 
+        
+train_cluster_centers.head()
+
+sns.pairplot(data=train_cluster_centers,hue='Status')
+
+**------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------**
+
+### Importing Test data
+
+test_data = pd.read_csv('Test marionett.csv')
+
+test_data.head()
+
+### Feature extraction
+
+featured_test_data = test_data.drop(['No.','Time','Info'],axis=1)
+
+featured_test_data.head()
+
+### Data preprocessing
+
+categorical2numerical(featured_test_data)
+featured_test_data.head()
+
+### Clustering(Test data)
+
+kmeans_model_test = KMeans(n_clusters=5)
+X = featured_test_data[['Length','Protocol','Source','Destination']]
+kmeans_model_test.fit(X)
+kmeans_model_test.inertia_
+
+test_cluster_centers = kmeans_model_test.cluster_centers_
+
+featured_test_data['Prediction'] = kmeans_model_test.labels_
+
+featured_test_data.head()
+
+test_cluster_centers = pd.DataFrame(test_cluster_centers,columns=['Length','Protocol','Source','Destination'])
+
+test_cluster_centers.head()
+
+#Adding labels to the cluster centers[malware or benign]
+test_cluster_centers['Status'] = 0
+
+for i,row in test_cluster_centers.iterrows():
+    #print(row['length'])
+    if(((row['Length'])>=600) & ((row['Length'])<=650)):
+        print(test_cluster_centers['Length'][i])
+        test_cluster_centers['Status'][i] = 1
+    else:
+        print(test_cluster_centers['Length'][i]) 
+        
+test_cluster_centers.head() 
+
+### Classification
+
+**Training data_X = training cluster centers**   ||     
+**Training data_y = training cluster centers[Status]** ||
+    **Testing data = testing cluster centers**
+
+from sklearn.naive_bayes import MultinomialNB
+
+classifier = MultinomialNB()
+
+X_train = train_cluster_centers.drop('Status',axis=1)
+y_train = train_cluster_centers['Status']
+classifier.fit(X_train,y_train)
+
+X_test = test_cluster_centers[['Length','Protocol','Source','Destination']]
+
+predict = classifier.predict(X_test)
+
+### model evaluation
+
+from sklearn.metrics import classification_report,confusion_matrix
+
+print (classification_report(test_cluster_centers['Status'],predict))
+
+print(confusion_matrix(test_cluster_centers['Status'],predict))
