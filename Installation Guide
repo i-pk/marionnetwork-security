@@ -1,0 +1,28 @@
+Installing Anaconda
+  link: https://www.anaconda.com/download/
+  choose type of OS and python version
+  Done
+
+Installing Apache spark
+  link: https://spark.apache.org/downloads.html
+  Choose latest version of spark and other requirements
+  Done- file will be installed as zip file extract it.
+  
+  SettingUP the System Environment Variables:
+  SPARK_HOME = 'PATH TO NEWLY INSTALLED AND EXTRACTED SPARK FOLDER'
+  HADOOP_HOME = 'PATH TO NEWLY INSTALLED AND EXTRACTED SPARK FOLDER'
+  PYSPARK_DRIVER_PYTHON = 'PATH TO JUPYTER NOTEBOOK IT WILL BE IN - ANACONDA/Scripts/jupyter'
+  Done with environment variables
+  
+  Using SparkContext in jupyter notebook
+  Open jupyter notebook from Anaconda Navigator
+  Write this code in order to use SparkContext:
+  ----CODE--------------------------------------------------------------------------
+  |  import findspark                                                              |
+  |  findspark.init('C:\spark-2.2.0-bin-hadoop2.7\spark-2.2.0-bin-hadoop2.7')      |
+  |  import pyspark # only run after findspark.init()                              |
+  |  from pyspark.sql import SparkSession                                          |
+  |  from pyspark import SparkContext                                              |
+  |  spark = SparkSession.builder.getOrCreate()                                    |
+  |  sc = SparkContext.getOrCreate()                                               |
+  ---------------------------------------------------------------------------------
