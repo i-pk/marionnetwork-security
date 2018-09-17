@@ -1,0 +1,289 @@
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('pima-indians-diabetes.csv')
+
+df.head()
+
+### Normalizing the columns
+
+cols_to_norm = ['Number_pregnant', 'Glucose_concentration', 'Blood_pressure', 'Triceps','Insulin', 'BMI', 'Pedigree']
+df[cols_to_norm] = df[cols_to_norm].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
+df.head()
+
+### Converting columns
+#### from pandas series to tensorflow's feature _columns - numeric column
+
+type(df['Blood_pressure'])
+
+num_preg = tf.feature_column.numeric_column('Number_pregnant')
+glucz_cont = tf.feature_column.numeric_column('Glucose_concentration')
+bp = tf.feature_column.numeric_column('Blood_pressure')
+trcp = tf.feature_column.numeric_column('Triceps')
+insulin = tf.feature_column.numeric_column('Insulin')
+bmi = tf.feature_column.numeric_column('BMI')
+peddeg = tf.feature_column.numeric_column('Pedigree')
+age = tf.feature_column.numeric_column('Age')
+
+type(bp)
+
+#### from pandas series to tensorflow's feature_columns - vocabularyListCategoricalColumn
+
+assigned_grp = tf.feature_column.categorical_column_with_vocabulary_list('Group',['A','B','C','D'])
+embeded_grp_col = tf.feature_column.embedding_column(assigned_grp,dimension=4)
+
+#### from pandas series to tensorflow's feature_column - BuketizedColumn
+
+age_bucket = tf.feature_column.bucketized_column(age,boundaries=[20,30,40,50,60,70,80])
+
+type(age_bucket)
+
+### Making list of all the newly made columns
+
+feat_cols = [num_preg,glucz_cont,bp,trcp,insulin,bmi,peddeg,age_bucket,embeded_grp_col]
+
+type(feat_cols)
+
+### splitting data into X_data and Lables
+
+X_data = df.drop('Class',axis=1)
+
+lable = df['Class']
+
+### Appling DL
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_test,y_train,y_test = train_test_split(X_data,lable,test_size=0.3)
+
+# Returns input function that would feed Pandas DataFrame into the model.
+# Function, that has signature of ()->(dict of features, target)
+
+input_func = tf.estimator.inputs.\
+pandas_input_fn(x=X_train,y=y_train,batch_size=10,\
+                num_epochs=1000,shuffle=False)
+
+dnn_model = tf.estimator.DNNClassifier(hidden_units=[10,10,10],feature_columns=feat_cols,n_classes=2)
+
+dnn_model.train(input_fn=input_func,steps=1000)
+
+eval_input_func = tf.estimator.inputs.pandas_input_fn(X_test,y_test,batch_size=10,num_epochs=1000,shuffle=False)
+
+dnn_model.evaluate(eval_input_func)
+
+--------------------------------------------COMPARISION-----------------------------------------------------------------------------
+
+#### DNNClassifier
+    hidden layer= 3-each have 10 nodes
+    optimizer= Adagrad
+    activation function= tf.nn.relu
+
+# loss calculated by softmax cross entropy
+# has 3 hidden layer plus input/output layer
+# optimiser is default as 'Adagrad'----->contains learning rate
+# activation function default--->tf.nn.relu
+
+### DNNClassifier
+    hidden layer = 3-each have 20 nodes
+    optimizer = Adam
+    activation function= tf.nn.relu
+    learning rate = 0.01
+    
+    {'accuracy': 0.7532467,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.8190397,
+     'auc_precision_recall': 0.6492499,
+     'average_loss': 0.5597426,
+     'global_step': 4000,
+     'label/mean': 0.34632036,
+     'loss': 5.5974264,
+     'precision': 0.69491524,
+     'prediction/mean': 0.28252992,
+     'recall': 0.5125}
+
+### DNNClassifier
+    hidden layer = 3-nodes[20,10,5]
+    optimizer = Adam
+    activation function= tf.nn.relu
+    learning rate = 0.01
+        
+     {'accuracy': 0.76623374,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.8209438,
+     'auc_precision_recall': 0.652401,
+     'average_loss': 0.5738319,
+     'global_step': 6000,
+     'label/mean': 0.34632036,
+     'loss': 5.738319,
+     'precision': 0.703125,
+     'prediction/mean': 0.29559395,
+     'recall': 0.5625}
+
+### DNNClassifier
+    hidden layer = 3-nodes[20,10,5]
+    optimizer = Adam
+    activation function= tf.nn.softmax_.......
+    learning rate = 0.01
+    
+     {'accuracy': 0.76623374,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.81841886,
+     'auc_precision_recall': 0.6473978,
+     'average_loss': 0.5856263,
+     'global_step': 7000,
+     'label/mean': 0.34632036,
+     'loss': 5.8562627,
+     'precision': 0.703125,
+     'prediction/mean': 0.29562446,
+     'recall': 0.5625}
+
+### DNNClassifier
+    hidden layer = 3-nodes[20,10,5]
+    optimizer = Adam
+    activation function= tf.nn.softmax_.......
+    learning rate = 0.001
+    
+    {'accuracy': 0.7748918,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.81974334,
+     'auc_precision_recall': 0.64981776,
+     'average_loss': 0.59240407,
+     'global_step': 8000,
+     'label/mean': 0.34632036,
+     'loss': 5.924041,
+     'precision': 0.71875,
+     'prediction/mean': 0.29889277,
+     'recall': 0.575}
+
+### DNNClassifier
+    hidden layer = 3-nodes[20,20,20]
+    optimizer = Adam
+    activation function= tf.nn.softmax_.......
+    learning rate = 0.001
+    
+    {'accuracy': 0.77056277,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.8187086,
+     'auc_precision_recall': 0.64674276,
+     'average_loss': 0.60140795,
+     'global_step': 9000,
+     'label/mean': 0.34632036,
+     'loss': 6.0140796,
+     'precision': 0.7076923,
+     'prediction/mean': 0.29935017,
+     'recall': 0.575}
+
+### DNNClassifier
+    hidden layer = 3-nodes[120,60,30]
+    optimizer = Adam
+    activation function= tf.nn.softmax_.......
+    learning rate = 0.001
+     
+     
+     {'accuracy': 0.77056277,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.81879133,
+     'auc_precision_recall': 0.64587677,
+     'average_loss': 0.60745746,
+     'global_step': 10000,
+     'label/mean': 0.34632036,
+     'loss': 6.0745745,
+     'precision': 0.70149255,
+     'prediction/mean': 0.30125034,
+     'recall': 0.5875}
+
+### DNNClassifier
+    hidden layer = 3-nodes **[120,60,30,15]**
+    optimizer = Adam
+    activation function= tf.nn.softmax_.......
+    learning rate = 0.001
+     
+     
+     {'accuracy': 0.76623374,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.8177152,
+     'auc_precision_recall': 0.6446437,
+     'average_loss': 0.613562,
+     'global_step': 11000,
+     'label/mean': 0.34632036,
+     'loss': 6.1356196,
+     'precision': 0.6911765,
+     'prediction/mean': 0.30215338,
+     'recall': 0.5875}
+
+### DNNClassifier
+    hidden layer = 3-nodes **[30,30,30,30]**
+    optimizer = Adam
+    activation function= tf.nn.softmax_.......
+    learning rate = 0.001
+     
+     
+     {'accuracy': 0.7619048,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.816846,
+     'auc_precision_recall': 0.6450637,
+     'average_loss': 0.6217916,
+     'global_step': 12000,
+     'label/mean': 0.34632036,
+     'loss': 6.217916,
+     'precision': 0.68115944,
+     'prediction/mean': 0.3035833,
+     'recall': 0.5875}
+
+### DNNClassifier
+    hidden layer = 3-nodes **[30,30]**
+    optimizer = Adam
+    activation function= tf.nn.softmax_.......
+    learning rate = 0.001
+     
+     
+    {'accuracy': 0.7619048,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.81576985,
+     'auc_precision_recall': 0.6436543,
+     'average_loss': 0.6277496,
+     'global_step': 13000,
+     'label/mean': 0.34632036,
+     'loss': 6.277496,
+     'precision': 0.68115944,
+     'prediction/mean': 0.30531898,
+     'recall': 0.5875}
+
+### DNNClassifier
+    hidden layer = 3-nodes **[30,30]**
+    optimizer = Adam
+    activation function= tf.nn.SIGMOID.......
+    learning rate = 0.001
+     
+     
+    {'accuracy': 0.77056277,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.81523174,
+     'auc_precision_recall': 0.64200616,
+     'average_loss': 0.6347351,
+     'global_step': 14000,
+     'label/mean': 0.34632036,
+     'loss': 6.347351,
+     'precision': 0.69014084,
+     'prediction/mean': 0.30641595,
+     'recall': 0.6125}
+
+### DNNClassifier
+    hidden layer = 3-nodes **[30,30,30]**
+    optimizer = Adam
+    activation function= tf.nn.SIGMOID.......
+    learning rate = 0.001
+
+    {'accuracy': 0.77056277,
+     'accuracy_baseline': 0.6536796,
+     'auc': 0.8138245,
+     'auc_precision_recall': 0.64143527,
+     'average_loss': 0.640385,
+     'global_step': 15000,
+     'label/mean': 0.34632036,
+     'loss': 6.4038496,
+     'precision': 0.69014084,
+     'prediction/mean': 0.30783728,
+     'recall': 0.6125}
