@@ -1,3 +1,6 @@
+##################################################################################################################################
+                                                Marionettwork-Semisupervised
+##################################################################################################################################
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -164,3 +167,419 @@ from sklearn.metrics import classification_report,confusion_matrix
 print (classification_report(test_cluster_centers['Status'],predict))
 
 print(confusion_matrix(test_cluster_centers['Status'],predict))
+
+
+##################################################################################################################################
+                                            House Price Prediction Regression - Using DEEP LEARNING(Tensorflow)
+##################################################################################################################################
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('House price data.csv')
+
+df.head()
+
+df.describe().transpose()
+
+x_data = df.drop(['medianHouseValue'],axis=1)
+
+y_val = df['medianHouseValue']
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_test,y_train,y_test = train_test_split(x_data,y_val,test_size=0.3,random_state=101)
+
+from sklearn.preprocessing import MinMaxScaler
+
+scaler = MinMaxScaler()
+
+scaler.fit(X_train)
+
+X_train = pd.DataFrame(data=scaler.transform(X_train),columns=X_train.columns,index=X_train.index)
+
+X_test = pd.DataFrame(data=scaler.transform(X_test),columns=X_test.columns,index=X_test.index)
+
+df.columns
+
+age = tf.feature_column.numeric_column('housingMedianAge')
+rooms = tf.feature_column.numeric_column('totalRooms')
+bedrooms = tf.feature_column.numeric_column('totalBedrooms')
+pop = tf.feature_column.numeric_column('population')
+households = tf.feature_column.numeric_column('households')
+income = tf.feature_column.numeric_column('medianIncome')
+
+feat_cols = [age,rooms,bedrooms,pop,households,income]
+
+input_func = tf.estimator.inputs.pandas_input_fn(x=X_train,y=y_train,batch_size=10,\
+                                                num_epochs=1000,shuffle=True)
+
+model = tf.estimator.DNNRegressor(hidden_units=[6,6,6],feature_columns=feat_cols)
+
+model.train(input_fn=input_func,steps=25000)
+
+predict_input_func = tf.estimator.inputs.pandas_input_fn(
+      x=X_test,
+      batch_size=10,
+      num_epochs=1,
+      shuffle=False)
+
+pred_gen = model.predict(predict_input_func)
+
+predictions = list(pred_gen)
+
+final_preds = []
+for pred in predictions:
+    final_preds.append(pred['predictions'])
+
+from sklearn.metrics import mean_squared_error
+
+mean_squared_error(y_test,final_preds)**0.5
+
+
+
+####################################################################################################################################
+                                        Classification - Using DEEPLEARNING(Tensorflow)
+####################################################################################################################################
+// read data<br>
+//converting label to 0,1<br>
+//train_test_split<br>
+//converting columns into numeric column and categorical column<br>
+/featur cols<br>
+/input func shuffle=true<br>
+/define model (DNNclassifiers - embedded column)<br>
+/train<br>
+/evaluation - prediction<br>
+/prediction<br>
+/transform to list<br>
+/classification report
+
+import pandas as pd
+
+census = pd.read_csv("census_data.csv")
+
+census.head()
+
+census['income_bracket'].unique()
+
+def label_fix(label):
+    if label==' <=50K':
+        return 0
+    else:
+        return 1
+census['income_bracket'] = census['income_bracket'].apply(label_fix)
+
+from sklearn.model_selection import train_test_split
+
+x_data = census.drop('income_bracket',axis=1)
+y_labels = census['income_bracket']
+X_train, X_test, y_train, y_test = train_test_split(x_data,y_labels,test_size=0.3,random_state=101)
+
+import tensorflow as tf
+
+gender = tf.feature_column.categorical_column_with_vocabulary_list("gender", ["Female", "Male"])
+occupation = tf.feature_column.categorical_column_with_hash_bucket("occupation", hash_bucket_size=1000)
+marital_status = tf.feature_column.categorical_column_with_hash_bucket("marital_status", hash_bucket_size=1000)
+relationship = tf.feature_column.categorical_column_with_hash_bucket("relationship", hash_bucket_size=1000)
+education = tf.feature_column.categorical_column_with_hash_bucket("education", hash_bucket_size=1000)
+workclass = tf.feature_column.categorical_column_with_hash_bucket("workclass", hash_bucket_size=1000)
+native_country = tf.feature_column.categorical_column_with_hash_bucket("native_country", hash_bucket_size=1000)
+
+age = tf.feature_column.numeric_column("age")
+education_num = tf.feature_column.numeric_column("education_num")
+capital_gain = tf.feature_column.numeric_column("capital_gain")
+capital_loss = tf.feature_column.numeric_column("capital_loss")
+hours_per_week = tf.feature_column.numeric_column("hours_per_week")
+
+feat_cols = [gender,occupation,marital_status,relationship,education,workclass,native_country,
+            age,education_num,capital_gain,capital_loss,hours_per_week]
+
+input_func=tf.estimator.inputs.pandas_input_fn(x=X_train,y=y_train,batch_size=100,num_epochs=None,shuffle=True)
+
+## Simple Linear Regression
+
+model = tf.estimator.LinearClassifier(feature_columns=feat_cols)
+
+model.train(input_fn=input_func,steps=5000)
+
+pred_fn = tf.estimator.inputs.pandas_input_fn(x=X_test,batch_size=len(X_test),shuffle=False)
+
+predictions = list(model.predict(input_fn=pred_fn))
+
+predictions [0]
+
+final_preds = []
+for pred in predictions:
+    final_preds.append(pred['class_ids'][0])
+
+final_preds[:10]
+
+from sklearn.metrics import classification_report
+
+print(classification_report(y_test,final_preds))
+
+## Dense Classifier
+
+dnnModel = tf.estimator.DNNClassifier(hidden_units=[6,6,6],feature_columns=feat_cols)
+
+### converting each categorical attribute into dense column
+
+df.info()
+
+df['native_country'].nunique()
+[gender,occupation,marital_status,relationship,education,workclass,native_country,
+            age,education_num,capital_gain,capital_loss,hours_per_week]
+
+embeded_workclass = tf.feature_column.embedding_column(workclass,dimension=9)
+embeded_education = tf.feature_column.embedding_column(edu,dimension=16)
+embeded_marital_status = tf.feature_column.embedding_column(marital_status,dimension=7)
+embeded_occupation = tf.feature_column.embedding_column(occupation,dimension=7)
+embeded_relationship = tf.feature_column.embedding_column(relationship,dimension=7)
+embeded_race = tf.feature_column.embedding_column(race,dimension=7)
+embeded_gender = tf.feature_column.embedding_column(gender,dimension=7)
+embeded_native_country = tf.feature_column.embedding_column(native_country,dimension=7)
+
+new_feat_cols = [embeded_education,embeded_gender,embeded_marital_status,embeded_native_country,
+                 embeded_occupation,embeded_race,embeded_relationship,embeded_workclass]
+
+new_input_func = tf.estimator.inputs.pandas_input_fn(x=X_train,y=y_train,batch_size=10,num_epochs=100,shuffle=True)
+
+dnnModel = tf.estimator.DNNClassifier(hidden_units=[6,6,6],feature_columns=new_feat_cols)
+
+dnnModel.train(input_fn=new_input_func,steps=1000)
+
+eval_input_func = tf.estimator.inputs.pandas_input_fn(X_test,y_test,batch_size=10,num_epochs=100,shuffle=False)
+
+dnnModel.evaluate(eval_input_func)
+
+/Saving and restoring the models
+
+/**with tf.Session() in sess:<br>
+/    '''<br>
+/   other code<br>
+/'''<br>
+/ saver.save(sess,'pathway to checkpoint or directory path/checkpoint.ckpt')**
+
+/saver.restore(sess,'checkpint.ckpt')
+
+####################################################################################################################################
+                                                      Basic Neural Network
+####################################################################################################################################
+    
+import tensorflow as tf
+import numpy as np
+
+np.random.seed(101)
+tf.set_random_seed(101)
+
+rand_a = np.random.uniform(0,100,(5,5))
+rand_a
+
+rand_b = np.random.uniform(0,100,(5,1))
+rand_b
+
+a = tf.placeholder(tf.float32)
+
+b = tf.placeholder(tf.float32)
+
+add_op = a + b  
+
+mul_op = a * b
+
+with tf.Session() as sess:
+    result_add = sess.run(add_op,feed_dict={a:rand_a,b:rand_b})
+    print(result_add,'\n\n')
+    
+    mul_result = sess.run(mul_op,feed_dict={a:rand_a,b:rand_b})
+    print(mul_result)
+
+## Layer Network
+n_features = 10
+n_dense_neurons = 3  #3Neurons in hidden layer
+
+
+x = tf.placeholder(tf.float32,shape=(None,n_features))  #will have shape of (None,10)
+
+w = tf.Variable(tf.random_normal([n_features,n_dense_neurons]))  #w will be having shape of (n_features X n_dense_neurons) (10X3)
+
+b = tf.Variable(tf.ones([n_dense_neurons]))  # will have shape of (3)
+
+xw = tf.matmul(x,w)
+
+z = tf.add(xw,b)
+
+a = tf.sigmoid(z)
+
+ init = tf.global_variables_initializer()#Initializing all the variables
+
+with tf.Session() as sess:
+   
+    sess.run(init)
+    result = sess.run(a,feed_dict={x:np.random.random(([1,n_features]))})
+
+print(result)
+
+#No this is not it, after this cost will be calculated and then according to that w will be updated
+
+## Simple Regression Example <br> on fake data
+
+x_data = np.linspace(0,10,10) + np.random.uniform(-1.5,2.5,10)   #Adding some noise to the data X
+
+x_data
+
+y_label = np.linspace(0,10,10) + np.random.uniform(-1.5,1.5,10)   #Adding some noise to the data Y
+
+y_label
+
+import matplotlib.pyplot as plt
+plt.plot(x_data,y_label,'*')
+
+y = mx + b
+
+np.random.rand(2)
+
+# Choosing 2 randome numbers for m and b later it will be changed by the model
+m = tf.Variable(0.44)
+b = tf.Variable(0.87)
+
+# y_hat is predicted value 
+# error will be calculated 
+error = 0
+
+for x,y in zip(x_data,y_label):
+    y_hat = m*x + b
+    error += (y-y_hat)**2     ## To minimize the error
+
+optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)      # Defining gradient decent for the problem
+
+train = optimizer.minimize(error)  ## We are trying to minimizer error  soooooooo..
+
+init = tf.global_variables_initializer()  # initializing all the variables
+with tf.Session() as sess:
+    sess.run(init)
+    
+    training_steps = 10                  # for this many times loop will run and it will try to minimize the error
+    
+    for i in range(training_steps):
+        sess.run(train)
+        
+    final_slope, final_intercept = sess.run([m,b])
+
+x_test = np.linspace(-1,11,10)
+
+#y = mx + b
+y_pred_plot = final_slope*x_test + final_intercept
+
+plt.plot(x_test,y_pred_plot,'r')
+plt.plot(x_data,y_label,'*')
+
+print(final_slope)
+print(final_intercept)
+
+
+################################################################################################################################
+                                Classification Using Dense Neural Network
+################################################################################################################################
+
+
+
+import pandas as pd
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+
+df = pd.read_csv('pima-indians-diabetes.csv')
+
+df.head()
+
+df.columns
+
+### Normalizing the values of each columns
+
+cols_to_norm = ['Number_pregnant', 'Glucose_concentration', 'Blood_pressure', 'Triceps','Insulin', 'BMI', 'Pedigree']
+
+df[cols_to_norm] = df[cols_to_norm].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
+
+df.head()
+
+num_preg = tf.feature_column.numeric_column('Number_pregnant')
+glucz_cont = tf.feature_column.numeric_column('Glucose_concentration')
+bp = tf.feature_column.numeric_column('Blood_pressure')
+trcp = tf.feature_column.numeric_column('Triceps')
+insulin = tf.feature_column.numeric_column('Insulin')
+bmi = tf.feature_column.numeric_column('BMI')
+peddeg = tf.feature_column.numeric_column('Pedigree')
+age = tf.feature_column.numeric_column('Age')
+
+assigned_grp = tf.feature_column.categorical_column_with_vocabulary_list('Group',['A','B','C','D'])
+# OR
+#assigned_grp = tf.feature_column.categorical_column_with_hash_bucket('Group',hash_bucket_size=4)#4 for 4 diffrent value
+
+df['Age'].hist(bins=20)
+
+age_bucket = tf.feature_column.bucketized_column(age,boundaries=[20,30,40,50,60,70,80])
+
+feat_cols = [num_preg,glucz_cont,bp,trcp,insulin,bmi,peddeg,age_bucket,assigned_grp]
+
+# Train Test Split
+X_data = df.drop('Class',axis=1)
+
+X_data.head()
+
+labwls = df['Class']
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_test,y_train,y_test = train_test_split(X_data,labwls,test_size=0.3,random_state=101)
+
+## Defining Input Function
+input_func = tf.estimator.inputs.pandas_input_fn(x=X_train,y=y_train,batch_size=10,num_epochs=1000,shuffle=False)
+
+model = tf.estimator.LinearClassifier(feature_columns=feat_cols,n_classes=2)
+
+model.train(input_fn=input_func, steps=1000)
+
+eval_input_func = tf.estimator.inputs.pandas_input_fn(X_test,y_test,batch_size=10,num_epochs=1,shuffle=False)
+
+results = model.evaluate(eval_input_func)
+
+results
+
+pred_input_func = tf.estimator.inputs.pandas_input_fn(x=X_test,batch_size=10,num_epochs=1,shuffle=False)
+
+predictions = model.predict(pred_input_func)
+
+my_pred = list(predictions)
+
+my_pred
+
+# DEnse Neural Network Classifier
+dnn_model = tf.estimator.DNNClassifier(hidden_units=[10,10,10],feature_columns=feat_cols,n_classes=2)
+
+dnn_model.train(input_fn=input_func, steps=1000)
+
+embeded_grp_col = tf.feature_column.embedding_column(assigned_grp,dimension=4)
+
+feat_cols = [num_preg,glucz_cont,bp,trcp,insulin,bmi,peddeg,age_bucket,embeded_grp_col]
+
+input_func2 = tf.estimator.inputs.pandas_input_fn(X_train,y_train,batch_size=10,num_epochs=1000,shuffle=True)
+
+dnn_model = tf.estimator.DNNClassifier(hidden_units=[10,10,10],feature_columns=feat_cols)
+
+dnn_model.train(input_fn=input_func,steps=1000)
+
+eval_input_func = tf.estimator.inputs.pandas_input_fn(X_test,y_test,batch_size=10,num_epochs=1000,shuffle=False)
+
+dnn_model.evaluate(eval_input_func)
+
+ **STEPS**<br>
+ Import data<br>
+ normalize data<br>
+ make feature columns out of the data for both numberic and categorical columns<br>
+ train test split the data<br>
+ create input func <br>
+ create classifier<br>
+ train<br>
+ evaluate<br>
+ predict<br>
