@@ -1,0 +1,110 @@
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+network_df = pd.read_csv('marionett_final_data.csv')
+
+network_df.head()
+
+network_df['class'] = network_df['Protocol'].apply(lambda x: 1 if x == 'ICMP' else 0)
+
+network_df[network_df['class'] == 1]
+
+def preprocessing(df):
+    df['Source'] = df['Source'].apply(lambda x: x.split('.'))
+    df['Source'] = df['Source'].apply(lambda x: ''.join(x))
+
+
+    #To remove 'f89e::soi0::h01i::fr45::q23e this kind of fields
+    for i,row in df.iterrows():
+        #print(row['Source'])
+        if((row['Source']).find(":") != -1):
+            #print('yy')
+            df.drop(i, inplace=True)     
+    df['Source'] = df['Source'].apply(lambda x:int(x))
+    df['Source'] = df['Source'].apply(lambda x:x/100000)
+
+
+    df['Destination'] = df['Destination'].apply(lambda x: x.split('.'))
+    df['Destination'] = df['Destination'].apply(lambda x: ''.join(x))
+    #To remove 'f89e::soi0::h01i::fr45::q23e this kind of fields
+    for i,row in df.iterrows():
+        #print(row['Destination'])
+        if((row['Destination']).find(":") != -1):
+            #print('yy')
+            df.drop(i, inplace=True)     
+    df['Destination'] = df['Destination'].apply(lambda x:int(x))
+    df['Destination'] = df['Destination'].apply(lambda x:x/100000)
+
+    df['Protocol'] = df['Length'].apply(lambda x: int(x/5))
+    
+    df.drop(['No.','Time','Info'],axis=1,inplace=True)
+    
+    return df
+
+'''
+## Rather than removing . from source and destination IP we can assign each IP an ubique number and replace it in datframe
+##----------------------------------------------------------------------------------------------------------------------------
+Steps to do that
+
+-> Create list of unique value from both source and destination
+-> now create list of number which has similar length as above variable
+-> Make dictionary from it and apply that dictionary to dataframe so that values in the dataframe will be 
+   changed according to Dictionary Key-Value Pair
+
+## Example  -- something like this......
+    location_list = (df['location'].unique()).tolist()
+    pin = list(range(1,1310))
+    location_dictionary = dict(zip(location_list, pin))
+    df['zipcode'] = df['location'].replace(location_dictionary, regex=True)
+    
+'''
+
+processed_df = preprocessing(network_df)
+
+processed_df.head()
+
+### Normalizing
+
+processed_df.columns
+
+cols_to_norm =['Source', 'Destination', 'Protocol', 'Length']
+processed_df[cols_to_norm] = processed_df[cols_to_norm].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
+processed_df.head()
+
+src = tf.feature_column.numeric_column('Source')
+dst = tf.feature_column.numeric_column('Destination')
+protocol = tf.feature_column.numeric_column('Protocol')
+length = tf.feature_column.numeric_column('Length')
+
+status = tf.feature_column.numeric_column('class')
+
+feature_cols = [src,dst,protocol,length]
+
+X_data = processed_df.drop('class',axis=1)
+
+y_data = processed_df['class']
+
+### Appling DL
+
+from sklearn.model_selection import train_test_split
+
+X_train,X_test,y_train,y_test = train_test_split(X_data,y_data,test_size=0.3)
+
+input_func = tf.estimator.inputs.pandas_input_fn(x=X_train,y=y_train,\
+                                                 batch_size=10,\
+                                                 num_epochs=1000,\
+                                                shuffle=False)
+
+# loss calculated by softmax cross entropy
+# has 3 hidden layer plus input/output layer
+# optimiser is default as 'Adagrad'----->contains learning rate
+# activation function default--->tf.nn.relu
+dnn_model = tf.estimator.DNNClassifier(hidden_units=[10,10,10],feature_columns=feature_cols,n_classes=2)
+
+dnn_model.train(input_fn=input_func,steps=1000)
+
+eval_input_func = tf.estimator.inputs.pandas_input_fn(X_test,y_test,batch_size=10,num_epochs=1000,shuffle=False)
+
+dnn_model.evaluate(eval_input_func)
