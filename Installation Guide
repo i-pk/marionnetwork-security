@@ -10,6 +10,7 @@ Installing Apache spark
   install jupyter-spark and pyspark in anaconda by writing this command.
   pip install jupyter-spark
   pip install pyspark
+  pip install findspark
   
   Done- file will be installed as zip file extract it.
   
