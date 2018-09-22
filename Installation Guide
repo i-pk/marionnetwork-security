@@ -6,6 +6,7 @@ Installing Anaconda
 Installing Apache spark
   link: https://spark.apache.org/downloads.html
   Choose latest version of spark and other requirements
+  Download winutils.exe from the repository to some local folder, e.g. C:\hadoop\bin.
   
   install jupyter-spark and pyspark in anaconda by writing this command.
   pip install jupyter-spark
@@ -16,8 +17,14 @@ Installing Apache spark
   
   SettingUP the System Environment Variables:
   SPARK_HOME = 'PATH TO NEWLY INSTALLED AND EXTRACTED SPARK FOLDER'
-  HADOOP_HOME = 'PATH TO NEWLY INSTALLED AND EXTRACTED SPARK FOLDER'
   PYSPARK_DRIVER_PYTHON = 'PATH TO JUPYTER NOTEBOOK IT WILL BE IN - ANACONDA/Scripts/jupyter'
+  HADOOP_HOME = C:\hadoop.
+  
+  Create c:\tmp\hive directory (using Windows Explorer or any other tool).
+  Open command prompt with admin rights.
+  Run C:\hadoop\bin\winutils.exe chmod 777 /tmp/hive
+  
+  
   Done with environment variables
   
   Using SparkContext in jupyter notebook
