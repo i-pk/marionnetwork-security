@@ -50,17 +50,17 @@ ADD:Continue to demo Button
     Data : What is the data which is used to train the ML model? Image
     Input : Input will be fetched from web page like which user has logged in which hotel is he viewing?
     Work : 2 type of recommendation has been given here, item based and user based...
-           Item based: 
-           User based:
+           Item based: Comparing similarity between items for recommendations......
+                       Cosine similarity, pearson similarity etc.. Show Images
+           User based: Comparing similarity between 2 users for recommending items.....
+                       Calculating K-nearest neighboures....Show Images..Images..Images
     Output : Results produced fromfeeding input data to ML model..IMAGE
-    Comparision : Comparision of ML results and other code/queries results..
-
-
-
+    Comparision : Comparision of ML results and other Queries results..
+                  
 -------------------------------------------------------------------------------------------------------
 Clustering
-
-
+-------------------------------------------------------------------------------------------------------
+work: 
 
 
 
