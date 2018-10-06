@@ -51,6 +51,7 @@ ADD:Continue to demo Button
     Input : Input will be fetched from web page like which user has logged in which hotel is he viewing?
     Work : 2 type of recommendation has been given here, item based and user based...
            Item based: 
+           User based:
     Output : Results produced fromfeeding input data to ML model..IMAGE
     Comparision : Comparision of ML results and other code/queries results..
 
