@@ -60,8 +60,11 @@ ADD:Continue to demo Button
 -------------------------------------------------------------------------------------------------------
 Clustering
 -------------------------------------------------------------------------------------------------------
-work: 
+in insight_clustering
+Work: How clustering makes 2 parts of anomalous and non-anomalous network packets???
+      How the accuracy, precision are checked???
 
+Comparision: Normal detection will be based on signature but this is anomaly based detection.
 
 
 
