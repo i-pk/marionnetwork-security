@@ -1,0 +1,41 @@
+import poplib
+import imaplib
+import email
+
+Y_SERVER = "imap.mail.yahoo.com"   
+G_SERVER = "imap.gmail.com"
+
+PORT = 993
+
+Y_USER = "testmail2396@yahoo.com" 
+G_USER = 'test.mail2396@gmail.com'
+
+Y_PASSWORD = "yahoowalu" 
+G_PASSWORD = "testmail@123"
+
+-------------  READING MAILS FROM gmail-------------------
+M = imaplib.IMAP4_SSL('imap.gmail.com')
+M.login(G_USER,G_PASSWORD)
+M.select()
+typ, data = M.search(None, 'ALL')
+for num in data[0].split():
+    typ, data = M.fetch(num, '(RFC822)')
+    print ('Message %s\n%s\n' % (num, data[0][1]))
+    
+M.close()
+
+-------------  READING MAILS FROM YAHOO-------------------
+Y = imaplib.IMAP4_SSL('imap.mail.yahoo.com')
+Y.login(Y_USER,Y_PASSWORD)
+Y.select()
+typ, data = Y.search(None, 'ALL')
+for num in data[0].split():
+    typ, data = Y.fetch(num, '(RFC822)')
+    print ('Message %s\n%s\n' % (num, data[0][1]))
+    
+Y.close()
+
+
+If we get Authentication error or Bad Credentials error then we have to disable some settings in both
+We have to allow less secure apps to access the mails.
+This can be found in account setting for both yahoo and gmail
