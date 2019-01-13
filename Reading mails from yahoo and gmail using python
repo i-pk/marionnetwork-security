@@ -10,8 +10,8 @@ PORT = 993
 Y_USER = "testmail2396@yahoo.com" 
 G_USER = 'test.mail2396@gmail.com'
 
-Y_PASSWORD = "yahoowalu" 
-G_PASSWORD = "testmail@123"
+Y_PASSWORD = "#######" 
+G_PASSWORD = "#######"
 
 -------------  READING MAILS FROM gmail-------------------
 M = imaplib.IMAP4_SSL('imap.gmail.com')
