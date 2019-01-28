@@ -1,0 +1,87 @@
+from werkzeug.wrappers import Request, Response
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def dashboard():
+    
+    '''
+    Counter_API: Total number of positive,negative and neutral sentiment across all the projects.
+        Output : # of +ve sentiment, # of -ve sentiment , # of neutral sentiment
+    ------------------------------------------------------------------------------------------------------------------------
+    Project wise sentiment : gives # of each sentiment project wise.
+        Like, For Project A: # of +ve sentiment, # of -ve sentiment , # of neutral sentiment
+              For Project B: # of +ve sentiment, # of -ve sentiment , # of neutral sentiment......etc.,
+        Output : Project name with # of +ve sentiment, # of -ve sentiment , # of neutral sentiment
+    ------------------------------------------------------------------------------------------------------------------------
+    Sentiment comparision given project name and months/time: Gives # of sentiments for given week/months/year
+        Like, For Project A: # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X
+                             # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X-1
+                             # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X-2
+        Input: Project_name,month/year/week
+        Output: Current month - 2/3 # of +ve sentiment, # of -ve sentiment , # of neutral sentiment for each month/year/week
+    ------------------------------------------------------------------------------------------------------------------------
+    Category wise sentiment: Gives # of +ve sentiment, # of -ve sentiment , # of neutral sentiment 
+                             for each category in the project
+        Like, Project A: 
+              Category 1 : # of +ve sentiment, # of -ve sentiment , # of neutral sentiment
+              Category 2 : # of +ve sentiment, # of -ve sentiment , # of neutral sentiment
+              Category 3 : # of +ve sentiment, # of -ve sentiment , # of neutral sentiment
+        Input: Project_name
+        Output: Category_name ,# of +ve sentiment, # of -ve sentiment , # of neutral sentiment
+    ------------------------------------------------------------------------------------------------------------------------
+    Category wise comparision given project name and time(week/month/year): Gives comparision of each category's 
+        sentiment's comparision week/month/year wise
+        Like, Project A:
+              Category 1 : # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X
+                           # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X-1
+                           # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X-2
+              
+              Category 2 : # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X
+                           # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X-1
+                           # of +ve sentiment, # of -ve sentiment , # of neutral sentiment FOR MONTH X-2
+              
+        Input: Project_name,time(week/month/year)
+        Output:Category , # of +ve sentiment, # of -ve sentiment , # of neutral sentiment
+        
+    ------------------------------------------------------------------------------------------------------------------------
+    Other than these API's : 
+        List of Projects
+        List of Category
+        List of months/week/year
+    
+    '''
+
+    return 'dashboard.html'
+
+
+@app.route("/sentiment")
+def sentiment():
+
+    '''
+    Project_name API call
+    Show Content of the project API
+    Show Project's sentiment details : 
+    Update sentiment: 
+    List of keywords API:
+    '''
+
+    return 'sentiment.html'
+
+
+@app.route("/action")
+def action():
+
+    '''
+    Project_name API call
+    List of Actions
+    
+    '''
+
+    return 'sentiment.html'
+
+
+
+if __name__ == '__main__':
+    from werkzeug.serving import run_simple
+    run_simple('localhost', 9000, app)
