@@ -55,3 +55,17 @@ def execute_find(query,projection,limit=None,page=None):
     res = list(test_collection.find(query,projection).skip(page*limit).limit(limit))
     #will return result of the query with objectID as string and count of those results
     return json.loads(json_util.dumps(res)),test_collection.count_documents(query)
+    
+    
+#Database names
+action: name,project,dateAssigned,dateModified,dueDate,responsiblePerson
+feedback : name,content,sentiment,status,date,category,keyword
+configuration: name,type,description,status,details-(email/website/ticketing_system,password,ports,server_name),createdBy,dateCreated
+category: name,keywords,description,createdBy,dateCreated,dateModified
+project: name,category,description,users,responsiblePerson,dateCreated,dateModified,status
+user: name,password,emailId,role,project
+role: name,description,dateCreated,dateModified,status
+user_token: username,token,date_assigned,status(active,deactive)
+data: name,content,sentiment,date,category,keyword,metadata(subject,type(email,review,DB...),subject)
+
+
