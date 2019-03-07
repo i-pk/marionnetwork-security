@@ -27,7 +27,8 @@ def query_making(project_name=None,status=None,time_option=None,start=None,end=N
     if time_option:
         time_query = create_time_query(time_option,start,end)
         query.append(time_query)
-    return query
+    return {"$and" : query}
+
 
 
 #projection.py
@@ -42,7 +43,15 @@ configuration = {"name":1,"type":1,"details":1,"status":1,"createdBy":1}
 
 
 a = list(test_collection.find({}))
-
+## here it will convert present objectId to string
 import json
 from bson import ObjectId,json_util
 jsonables = json.loads(json_util.dumps(a))
+
+
+#queries.py
+def execute_find(query,projection,limit=None,page=None):
+    page,limit = (0,5) if (not page) or (not limit) else (page,limit)
+    res = list(test_collection.find(query,projection).skip(page*limit).limit(limit))
+    #will return result of the query with objectID as string and count of those results
+    return json.loads(json_util.dumps(res)),test_collection.count_documents(query)
