@@ -9,26 +9,31 @@ def create_time_query(time_option=None,start=None,end=None):
     if time_option=='mothly':
         previous_date = (datetime.datetime.today() - relativedelta(months=2))
     if time_option=="yearly":
+        
         previous_date = (datetime.datetime.today() - relativedelta(years=2))
+        print(previous_date)
     if time_option=="custom" and start and end:
         start = datetime.datetime.strptime(start, "%Y-%m-%d")
         end = datetime.datetime.strptime(end, "%Y-%m-%d")
-        time_query= {"$and" : [{"date": {"$gt" : datetime.datetime(2019,2,2)}},{"date": {"$lte" : datetime.datetime(2019,3,1)}}]}
+    if time_option ="quarterly":
+        previous_date = (datetime.datetime.today - relativedelta(months=4))
+    time_query= {'date' :  {'$gt' : previous_date, '$lt' : datetime.datetime.today()}}
         
     return time_query
     
     
     
     
-def query_making(project_name=None,status=None,time_option=None,start=None,end=None):
+def query_making(project_name=None,status=None,time_option=None,start=None,end=None,category=None):
     query = []
     if project_name: query.append({"project_name":project_name})
     if status: query.append({"status":status})
     if time_option:
         time_query = create_time_query(time_option,start,end)
         query.append(time_query)
+    if category:
+        query.append({"category":category})
     return {"$and" : query}
-
 
 
 #projection.py
@@ -69,127 +74,66 @@ user_token: username,token,date_assigned,status(active,deactive)
 data: name,content,sentiment,date,category,keyword,metadata(subject,type(email,review,DB...),subject)
 
 
----------------------------------------------project_time_options-----------------------------------------
-result = list(self.__collection_TEST_data_with_sentiment.aggregate([
-    {'$match' : {'$and' : [{'date' :  {'$gt' : previous_date, '$lt' : datetime.datetime.today()}}, 
-                           {'project_name' : project_name}]}   },
+def time_wise_sentiment(project_name=None,time_option=None):
+    last_piece_match = query_making(project_name,time_option)
+    unwind_query = get_unwind(variable=project_name) # will give {}
+    last_piece_group = get_group(category=1,time_option="monthly",sentiment=1)
     
-    
-    {
-        "$group": {
-            "_id": {
-                "project": "$project_name",
-                "month": { "$month" : "$date"},
-                "sentiment": "$sentiment"
-            },            
-            "count": { "$sum": 1 }            
-        }
-    },{"$sort" : {"_id.month" : 1}},
-    {
-        "$group" : {
-            "_id" : "$_id.project",
-            "data" : {
-                "$push" : {
-                    "time_option" : "$_id.month",
-                    "sentiment" : "$_id.sentiment",
-                    "count" : "$count"
-                    }
-                },
-            "total_count": { "$sum": "$count" }
-            }
-    },
-    {
-        "$project" :{
-            "_id":0,
-            "project":"$_id",
-            "details" : "$data",
-            "percentage" : { 
-                "$map": { 
-                    "input": "$data", 
-                    "as": "row", 
-                    
-                    "in" : {"$substr": [ { "$multiply": [ { "$divide": [ "$$row.count", "$total_count"] }, 100 ] },0,4 ] }
-                }
-            }
-    }
-}
-]))
+    match_query = {'$match' : {'$and' : [last_piece_match]}}
+    group_query ={"$group": {"_id": last_piece_group, "count": { "$sum": 1 } }}
 
----------------------------------------------category_wise-----------------------------------------
-category_wise_sentiment_list= list(self.__collection_TEST_data_with_sentiment.aggregate(
-                [  {"$match": {'project_name': project_name } },
-    { "$unwind": "$category" },
-    {"$group" :
-    {'_id':{'category':"$category",'sentiment':"$sentiment"}, 'count':{'$sum':1}}
-    },
-  { "$project": {
-        "count": 1,
-        "percentage": {
-            "$substr": [ { "$multiply": [ { "$divide": [ "$count", {"$literal": nums }] }, 100 ] }, 0,4 ] }}
-        }
-    
-]
-))
-
-
----------------------------------------------project_wise-----------------------------------------
-project_wise_sentiment_list = list(self.__collection_TEST_data_with_sentiment.aggregate(
-                    [   {"$match" : {"project_name" : project_name }},
-                        {"$group" : 
-                        {'_id':{'project_name':"$project_name",'sentiment':"$sentiment",'id':'$id'}, 'count':{'$sum':1}}
-                        },
-                        { "$project": { 
-                            "count": 1, 
-                            "percentage": { 
-                                 "$substr": [ { "$multiply": [ { "$divide": [ "$count", {"$literal": nums }] }, 100 ] },
-                                                           0,4 ] } 
-                            }
+    time_wise = coll.aggregate([
+        match_query,
+        unwind_query,
+        group_query,
+        {"$sort" : {"_id.time_option" : 1}},
+        {
+            "$group" : {
+                "_id" : "$_id.variable",
+                "data" : {
+                    "$push" : {
+                        "time_option" : "$_id.time_option",
+                        "sentiment" : "$_id.sentiment",
+                        "count" : "$count"
                         }
-                    ]
-                ))
+                    },
+                "total_count": { "$sum": "$count" }
+                }
+        },
+        {
+            "$project" :{
+                "_id":0,
+                "project":"$_id",
+                "details" : "$data",
+                "percentage" : { 
+                    "$map": { 
+                        "input": "$data", 
+                        "as": "row", 
 
----------------------------------------------category_time-option-----------------------------------------
-
-result = list(self.__collection_TEST_data_with_sentiment.aggregate([
-    {'$match' : {'$and' : [{'date' :  {'$gt' : previous_date, '$lt' : datetime.datetime.today()}}, 
-                           {'project_name' : project_name}   ]}   },
-    
-    { "$unwind": "$category" },
-    {
-        "$group": {
-            "_id": {
-                "category": "$category",
-                "month": { "$month" : "$date"},
-                "sentiment": "$sentiment"
-            },            
-            "count": { "$sum": 1 }            
-        }
-    },{"$sort" : {"_id.month" : 1}},
-    {
-        "$group" : {
-            "_id" : "$_id.category",
-            "data" : {
-                "$push" : {
-                    "time_option" : "$_id.month",
-                    "sentiment" : "$_id.sentiment",
-                    "count" : "$count"
+                        "in" : {"$substr": [ { "$multiply": [ { "$divide": [ "$$row.count", "$total_count"] }, 100 ] },0,4 ] }
                     }
-                },
-            "total_count": { "$sum": "$count" }
-            }
-    },
-    {
-        "$project" :{
-            "_id":0,
-            "category":"$_id",
-            "details" : "$data",
-            "percentage" : { 
-                "$map": { 
-                    "input": "$data", 
-                    "as": "row", 
-                    
-                    "in" : {"$substr": [ { "$multiply": [ { "$divide": [ "$$row.count", "$total_count"] }, 100 ] },0,4 ] }
                 }
             }
-    }
-}]))
+        }
+    ])
+    return time_wise
+    
+    
+    
+    def get_unwind(variable=None):
+    if variable == category:
+        return {"$unwind" : "$category"}
+
+def get_group(category=None,time_option=None,sentiment=None,project_name=None):
+    query = {}
+    final = {"_id" : query}
+    if category: query[category] = "$"+category
+    if time_option == "monthly":
+         query["time_option"] = {"$month" : "$date"}
+    elif time_option == "yearly":
+        query["time_option"] = {"$year" : "$date"}
+    elif time_option == "weekly":
+        query["time_option"] = {"$week" : "$date"}
+    if project_name : {"project_name" : project_name}
+    if sentiment: {"sentiment": sentiment}
+    return final
