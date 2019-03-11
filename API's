@@ -69,3 +69,127 @@ user_token: username,token,date_assigned,status(active,deactive)
 data: name,content,sentiment,date,category,keyword,metadata(subject,type(email,review,DB...),subject)
 
 
+---------------------------------------------project_time_options-----------------------------------------
+result = list(self.__collection_TEST_data_with_sentiment.aggregate([
+    {'$match' : {'$and' : [{'date' :  {'$gt' : previous_date, '$lt' : datetime.datetime.today()}}, 
+                           {'project_name' : project_name}]}   },
+    
+    
+    {
+        "$group": {
+            "_id": {
+                "project": "$project_name",
+                "month": { "$month" : "$date"},
+                "sentiment": "$sentiment"
+            },            
+            "count": { "$sum": 1 }            
+        }
+    },{"$sort" : {"_id.month" : 1}},
+    {
+        "$group" : {
+            "_id" : "$_id.project",
+            "data" : {
+                "$push" : {
+                    "time_option" : "$_id.month",
+                    "sentiment" : "$_id.sentiment",
+                    "count" : "$count"
+                    }
+                },
+            "total_count": { "$sum": "$count" }
+            }
+    },
+    {
+        "$project" :{
+            "_id":0,
+            "project":"$_id",
+            "details" : "$data",
+            "percentage" : { 
+                "$map": { 
+                    "input": "$data", 
+                    "as": "row", 
+                    
+                    "in" : {"$substr": [ { "$multiply": [ { "$divide": [ "$$row.count", "$total_count"] }, 100 ] },0,4 ] }
+                }
+            }
+    }
+}
+]))
+
+---------------------------------------------category_wise-----------------------------------------
+category_wise_sentiment_list= list(self.__collection_TEST_data_with_sentiment.aggregate(
+                [  {"$match": {'project_name': project_name } },
+    { "$unwind": "$category" },
+    {"$group" :
+    {'_id':{'category':"$category",'sentiment':"$sentiment"}, 'count':{'$sum':1}}
+    },
+  { "$project": {
+        "count": 1,
+        "percentage": {
+            "$substr": [ { "$multiply": [ { "$divide": [ "$count", {"$literal": nums }] }, 100 ] }, 0,4 ] }}
+        }
+    
+]
+))
+
+
+---------------------------------------------project_wise-----------------------------------------
+project_wise_sentiment_list = list(self.__collection_TEST_data_with_sentiment.aggregate(
+                    [   {"$match" : {"project_name" : project_name }},
+                        {"$group" : 
+                        {'_id':{'project_name':"$project_name",'sentiment':"$sentiment",'id':'$id'}, 'count':{'$sum':1}}
+                        },
+                        { "$project": { 
+                            "count": 1, 
+                            "percentage": { 
+                                 "$substr": [ { "$multiply": [ { "$divide": [ "$count", {"$literal": nums }] }, 100 ] },
+                                                           0,4 ] } 
+                            }
+                        }
+                    ]
+                ))
+
+---------------------------------------------category_time-option-----------------------------------------
+
+result = list(self.__collection_TEST_data_with_sentiment.aggregate([
+    {'$match' : {'$and' : [{'date' :  {'$gt' : previous_date, '$lt' : datetime.datetime.today()}}, 
+                           {'project_name' : project_name}   ]}   },
+    
+    { "$unwind": "$category" },
+    {
+        "$group": {
+            "_id": {
+                "category": "$category",
+                "month": { "$month" : "$date"},
+                "sentiment": "$sentiment"
+            },            
+            "count": { "$sum": 1 }            
+        }
+    },{"$sort" : {"_id.month" : 1}},
+    {
+        "$group" : {
+            "_id" : "$_id.category",
+            "data" : {
+                "$push" : {
+                    "time_option" : "$_id.month",
+                    "sentiment" : "$_id.sentiment",
+                    "count" : "$count"
+                    }
+                },
+            "total_count": { "$sum": "$count" }
+            }
+    },
+    {
+        "$project" :{
+            "_id":0,
+            "category":"$_id",
+            "details" : "$data",
+            "percentage" : { 
+                "$map": { 
+                    "input": "$data", 
+                    "as": "row", 
+                    
+                    "in" : {"$substr": [ { "$multiply": [ { "$divide": [ "$$row.count", "$total_count"] }, 100 ] },0,4 ] }
+                }
+            }
+    }
+}]))
