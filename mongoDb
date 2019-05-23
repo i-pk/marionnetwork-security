@@ -1,0 +1,15 @@
+How to export/backup your collections?
+
+> Go to the folder where your mongoDb is installed
+> Open CMD there (Shift + Right click > open command window here)
+> Write command like this
+mongoexport --host <name_of_you_host> --port 27017 -d <name_of_the_database> -c <name_of_the_collection> -o <path/name_of_the_file.json>
+ex. mongoexport --host localhost --port 27017 -d se_dev -c category -o D:\backup\category.json
+
+
+How to restore your collection?
+> Go to the folder where your mongoDb is installed
+> Open CMD there (Shift + Right click > open command window here)
+> Write command like this
+mongoimport --host <name_of_ur_host> --port 27017 -d <name_of_DB_where_you_want_to_import> -c <name_of_new_collection_where_saved_data_will_be_imported> --file <path/where__exported_file_is_saved/file_name.json>
+mongoimport --host localhost --port 27017 -d se_dev -c ImportedCategory --file D:\backup\category.json
