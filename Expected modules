@@ -1,0 +1,60 @@
+Expected modules
+1.Registration (for Lab)
+2.Tour of sortware/ Tool tips with next> next> options
+3.Sign In 
+4.Sign Up (For user/employee of the lab)
+5.Report (Creation / Making / Editing / Writing)
+6.Blood test (Creation / Editing)
+7.Doctor (Create / Read / Update / Delete )
+8.Patent(Create / Read / Update / Delete)
+9.Normal value
+10.Default report sending option
+
+
+Details of the modules
+Registration
+  This will be used to register any Lab
+  Will have feilds like
+  Name, owner, contact_no, co-owner, contact_no, address, city, state, country, zip_code, favicon, userId(This user id will be main/admin userId), password
+
+Tour 
+  This will be used to give tour of the software to new user
+
+Sign In
+  Log in
+  Fields: user name ,  password
+
+Sign Up:
+  Sign up of new user/employee of the lab
+  Fields: user name/email, password, confirm password, phone no., address
+
+Report
+  Report is a group of blood tests
+  It can be created, modified, Edited(print) or deleted
+  Create - To make new report which never existed before, using already existing blood tests
+  Modify - To change few things in already existing reports
+  Edit(print) - For printing patent’s report
+
+Blood test
+  Blood test with it’s normal values
+  We can add or modify it.
+  It will have an shortcut of the module, normal values
+
+Doctor
+  Add, modify, delete, read
+  It's refrence will come as an drop down to report printing module
+  Fields - name, degree, phone number, address, email - dates
+  Default report sending option - 
+  For each doctore we have to choose default report sending option, if user chooses send and print option 
+  then system must send report to doctor on that selected option, it can be email, text message or whatsapp message.
+  
+ Patent
+  all details about patent will be in this module
+  This can be added directly from report printing module or we can add each patent's details individually
+  fields: name ,number, address, blood group, last visited date, reports link
+  
+ Normal values
+  Each blood test will have it's normal values stored in here
+  We can Create, Read, Update, Delete any blood test's normal values here
+  fields : Unknown
+  
